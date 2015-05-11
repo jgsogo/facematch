@@ -3,5 +3,5 @@ project( facematch )
 
 find_package( OpenCV REQUIRED )
 
-add_executable( facematch main.cpp )
+add_executable( facematch main.cpp facematch.h facematch.cpp )
 target_link_libraries( facematch ${OpenCV_LIBS} )

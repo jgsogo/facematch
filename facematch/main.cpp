@@ -15,6 +15,7 @@ int main(int argc, char** argv ) {
     //  * work on each image to get faces
     //  * crop and rescale
 
+    // Unsupervised classification
     //  * apply unsupervised classification: kmeans
     //  * store each cluster into a different folder and name the photos with numbers
     //  proportional to the distance to the centroid.
