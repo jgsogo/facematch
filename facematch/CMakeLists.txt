@@ -12,7 +12,16 @@ set(SRC_FILES
             )
 include_directories(${OpenCV_INCLUDE_DIRS})
 add_executable( facematch ${SRC_FILES} )
+set_property(TARGET facematch PROPERTY CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 target_link_libraries( facematch ${OpenCV_LIBS} )
 
 # Copy cascade files to build directory.
-file(COPY "${OpenCV_CONFIG_PATH}/etc" DESTINATION "${CMAKE_BINARY_DIR}/data")
+if(WIN32)
+    file(COPY "${OpenCV_CONFIG_PATH}/etc/haarcascades" DESTINATION "${CMAKE_BINARY_DIR}/data/")
+elseif(UNIX)
+    string(TOLOWER "${OpenCV_CONFIG_PATH}/haarcascades" HAARCASCADES)
+    file(COPY "${HAARCASCADES}" DESTINATION "${CMAKE_BINARY_DIR}/data/")
+else()
+endif()
+

@@ -8,8 +8,8 @@ struct FaceDetection::ClassifierData {
 	CascadeClassifier face_cascade;
 	CascadeClassifier eyes_cascade;
 	ClassifierData() {
-		auto hret = face_cascade.load("./data/etc/haarcascades/haarcascade_frontalface_alt.xml");
-		eyes_cascade.load("./data/etc/haarcascades/haarcascade_eye_tree_eyeglasses.xml");
+		auto hret = face_cascade.load("./data/haarcascades/haarcascade_frontalface_alt.xml");
+		eyes_cascade.load("./data/haarcascades/haarcascade_eye_tree_eyeglasses.xml");
 		};
 };
 

@@ -66,7 +66,7 @@ int main(int argc, char** argv ) {
 		for (auto& face : faces_aux) {
 			if (face.hasEyes()) {
 				common_size = (min)(common_size, face.getImage().size().width);
-				auto it = faces.insert(make_pair(item.first, vector<Face>()));	
+				auto it = faces.insert(make_pair(item.first, vector<Face>()));
 				it.first->second.push_back(face);
 				n_faces.second++;
 			}
@@ -77,13 +77,13 @@ int main(int argc, char** argv ) {
 
 	std::for_each(faces.begin(), faces.end(), [](const pair<size_t, vector<Face>>& item) {
 		for (auto& face : item.second) {
-			//imshow("Image", face.crop(50, true));
-			//waitKey(0);
+			imshow("Image", face.crop(50, true));
+			waitKey(0);
 		}
 	});
 
 
-    
+
     //  * work on each image to get faces
     //  * crop and rescale
 
