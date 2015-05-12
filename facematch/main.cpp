@@ -43,7 +43,7 @@ int main(int argc, char** argv ) {
 	vector<int> labels;
 	try {
 		cout << "Reading dataset... ";
-		read_csv(argv[1], images, labels, ';', 10);
+		read_csv(argv[1], images, labels, ';', 150);
 		cout << images.size() << " images read" << endl;
 	}
 	catch (cv::Exception& e) {
@@ -56,17 +56,25 @@ int main(int argc, char** argv ) {
 	}
 
 	// Work on each image to get faces and eyes
-	std::vector<Face> faces;
-	std::for_each(images.begin(), images.end(), [&faces](pair<const size_t, Mat>& item) {
-		auto faces_aux = FaceDetection::detectFaces(item.second, true);
-		copy_if(faces_aux.begin(), faces_aux.end(), back_inserter(faces), [](const Face& face){ return face.hasEyes(); });
+	map<size_t, vector<Face>> faces;
+	int common_size = numeric_limits<int>::max();
+	cv::Size min_size(30, 30);
+	for_each(images.begin(), images.end(), [&faces, &common_size, &min_size](const pair<size_t, Mat>& item) {
+		auto faces_aux = FaceDetection::detectFaces(item.second, min_size, true);
+		for (auto& face : faces_aux) {
+			if (face.hasEyes()) {
+				common_size = (min)(common_size, face.getImage().size().width);
+				auto it = faces.insert(make_pair(item.first, vector<Face>()));	
+				it.first->second.push_back(face);
+			}
+		}
 	});
 
-	std::for_each(faces.begin(), faces.end(), [](Face& item) {
-		//item.crop(1, true);
-		imshow("Image", item.crop(10, true));
-		//show(item, true);
-		waitKey(0);
+	std::for_each(faces.begin(), faces.end(), [](const pair<size_t, vector<Face>>& item) {
+		for (auto& face : item.second) {
+			imshow("Image", face.crop(50, true));
+			waitKey(0);
+		}
 	});
 
 

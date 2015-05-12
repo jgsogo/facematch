@@ -5,12 +5,12 @@
 class Face {
 	public:
 		Face(const cv::Mat& img);
-		bool detectEyes();
+		bool detectEyes(const cv::Size& min_eye_size);
 		bool hasEyes() const;
 		const cv::Mat& getImage() const { return image; };
 		const cv::Rect& getEyeLeft() const { return eye_left; };
 		const cv::Rect& getEyeRight() const { return eye_right; };
-		cv::Mat crop(const float& radius, bool align_eyes);
+		cv::Mat crop(const float& radius, bool align_eyes) const;
 	protected:
 		cv::Mat image;
 		cv::Rect eye_left, eye_right;
