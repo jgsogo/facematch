@@ -23,14 +23,13 @@ def get_flickr(config_file):
 
 
 def download_photo(photo, path):
-	print(photo.get('title'))
+	title = photo.get('title')
 	photo_url = u'https://farm%(farm)s.staticflickr.com/%(server)s/%(id)s_%(secret)s_o.jpg' % {'farm': photo.get('farm'),
 												   'server': photo.get('server'),
 												   'id': photo.get('id'),
                                                                                                    'secret': photo.get('secret')}
-	      
-	title = "%s.jpg" % slugify(photo.get('title'))
-	filename = os.path.join(path, title)
+	id = photo.get('id')
+	filename = os.path.join(path, "%s.jpg" % id)
 	with open(filename, 'wb') as handle:
 		response = requests.get(photo_url, stream=True)
 
@@ -42,12 +41,16 @@ def download_photo(photo, path):
         		if not block:
             			break
         		handle.write(block)
-	
+	return id, title
 
 def download_album(api, album_id, path):
 	print("Download album to %r" % path)
-        for photo in api.walk_set(album_id):
-		download_photo(photo, path)
+	filename = os.path.join(path, "title.txt")
+	with open(filename, 'w') as filetitle:
+	        for photo in api.walk_set(album_id):
+			id, title = download_photo(photo, path)
+			filetitle.write("%s;%s\n" % (id, title))
+			print(title)
 
 
 if __name__ == '__main__':
