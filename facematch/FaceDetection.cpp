@@ -29,7 +29,8 @@ vector<Face> FaceDetection::detectFaces(const Mat& image, const Size& min_face_s
 	Mat frame_gray;
 	cvtColor(image, frame_gray, CV_BGR2GRAY);
 	equalizeHist(frame_gray, frame_gray);
-	classifier->face_cascade.detectMultiScale(frame_gray, aux, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, min_face_size);
+	int minNeighbours = 7;
+	classifier->face_cascade.detectMultiScale(frame_gray, aux, 1.1, minNeighbours, 0 | CV_HAAR_SCALE_IMAGE, min_face_size);
 	for (auto& rect : aux) {
 		auto it = faces.insert(faces.end(), Face(image(rect)));
 		if (detect_eyes) {

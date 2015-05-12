@@ -50,10 +50,6 @@ int main(int argc, char** argv ) {
 		cerr << "Error opening file \"" << argv[1] << "\". Reason: " << e.msg << endl;
 		exit(1);
 	}
-	if (images.size() <= 1) {
-		string error_message = "Not enough images to work. Please add more images to your dataset!";
-		CV_Error(CV_StsError, error_message);
-	}
 
 	// Work on each image to get faces and eyes
 	cout << "Looking for faces... ";
@@ -77,7 +73,7 @@ int main(int argc, char** argv ) {
 
 	std::for_each(faces.begin(), faces.end(), [](const pair<size_t, vector<Face>>& item) {
 		for (auto& face : item.second) {
-			imshow("Image", face.crop(50, true));
+			imshow("Image", face.crop(100, true));
 			waitKey(0);
 		}
 	});
