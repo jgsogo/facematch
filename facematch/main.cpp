@@ -77,8 +77,8 @@ int main(int argc, char** argv ) {
             Mat image = face.crop(100, true);
             std::stringstream ss; ss << "image_" << item.first << "_face_" << i++ << ".jpg";
             imwrite( ss.str(), image );
-			imshow("Image", image);
-			waitKey(0);
+			//imshow("Image", image);
+			//waitKey(0);
 		}
 	});
 
