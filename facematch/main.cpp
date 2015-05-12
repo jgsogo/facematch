@@ -3,25 +3,31 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
+#include <limits>
+#include <functional>
 #include <opencv2/opencv.hpp>
+
+#include "FaceDetection.h"
 
 using namespace cv;
 using namespace std;
 
-static void read_csv(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';') {
+static void read_csv(const string& filename, map<size_t, FaceDetection>& images, vector<int>& labels, char separator = ';', const size_t& max_items = numeric_limits<size_t>::max()) {
 	std::ifstream file(filename.c_str(), ifstream::in);
 	if (!file) {
 		string error_message = "No valid input file was given, please check the given filename.";
 		CV_Error(CV_StsBadArg, error_message);
 	}
-	string line, path, classlabel;
-	while (getline(file, line)) {
+	auto n_items = max_items;
+	string line, path, classlabel, token;
+	std::size_t id;
+	while (getline(file, line) && --n_items) {
 		stringstream liness(line);
+		getline(liness, token, separator); id = atoi(token.c_str());
 		getline(liness, path, separator);
 		getline(liness, classlabel);
 		if (!path.empty() && !classlabel.empty()) {
-			images.push_back(imread(path, 0));
+			images.insert(make_pair(id, imread(path)));
 			labels.push_back(atoi(classlabel.c_str()));
 		}
 	}
@@ -33,11 +39,11 @@ int main(int argc, char** argv ) {
         exit(1);
     }
 	// Read CSV file
-	vector<Mat> images;
+	map<size_t, FaceDetection> images;
 	vector<int> labels;
 	try {
 		cout << "Reading dataset... ";
-		read_csv(argv[1], images, labels);
+		read_csv(argv[1], images, labels, ';', 10);
 		cout << images.size() << " images read" << endl;
 	}
 	catch (cv::Exception& e) {
@@ -49,6 +55,11 @@ int main(int argc, char** argv ) {
 		CV_Error(CV_StsError, error_message);
 	}
 
+	// Work on each image to get faces and eyes
+	std::for_each(images.begin(), images.end(), [](pair<const size_t, FaceDetection>& item) {
+		item.second.detect();
+		//item.second.show();
+	});
     
     //  * work on each image to get faces
     //  * crop and rescale

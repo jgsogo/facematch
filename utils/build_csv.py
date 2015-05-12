@@ -8,11 +8,13 @@ def build_csv(directory):
               label = 0
               filename = os.path.basename(directory)
               filename = os.path.join(directory, '../', '%s.csv' % filename)
-              f = open(filename, 'w')              
+              f = open(filename, 'w')
+              i = 0
               for root, dirs, files in os.walk(directory):
                             for name in files:
                                           path = os.path.abspath(os.path.join(root, name))
-                                          f.write('%s;%d\n' % (path, label))
+                                          f.write('%d;%s;%d\n' % (i, path, label))
+                                          i += 1
                             label += 1
               f.close()
 
