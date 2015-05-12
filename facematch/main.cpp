@@ -56,24 +56,29 @@ int main(int argc, char** argv ) {
 	}
 
 	// Work on each image to get faces and eyes
+	cout << "Looking for faces... ";
 	map<size_t, vector<Face>> faces;
 	int common_size = numeric_limits<int>::max();
+	pair<size_t, size_t> n_faces = make_pair(0, 0);
 	cv::Size min_size(30, 30);
-	for_each(images.begin(), images.end(), [&faces, &common_size, &min_size](const pair<size_t, Mat>& item) {
+	for_each(images.begin(), images.end(), [&faces, &common_size, &min_size, &n_faces](const pair<size_t, Mat>& item) {
 		auto faces_aux = FaceDetection::detectFaces(item.second, min_size, true);
 		for (auto& face : faces_aux) {
 			if (face.hasEyes()) {
 				common_size = (min)(common_size, face.getImage().size().width);
 				auto it = faces.insert(make_pair(item.first, vector<Face>()));	
 				it.first->second.push_back(face);
+				n_faces.second++;
 			}
+			n_faces.first++;
 		}
 	});
+	cout << n_faces.first << " faces found (only " << n_faces.second << " with both eyes)." << endl;
 
 	std::for_each(faces.begin(), faces.end(), [](const pair<size_t, vector<Face>>& item) {
 		for (auto& face : item.second) {
-			imshow("Image", face.crop(50, true));
-			waitKey(0);
+			//imshow("Image", face.crop(50, true));
+			//waitKey(0);
 		}
 	});
 
