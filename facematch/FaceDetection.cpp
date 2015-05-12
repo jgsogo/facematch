@@ -45,16 +45,17 @@ vector<Rect> FaceDetection::detectEyes(const Mat& image, const Rect& face) {
 	Mat faceROI = image(face);
 	cvtColor(faceROI, faceROI, CV_BGR2GRAY);
 	equalizeHist(faceROI, faceROI);
-	classifier->eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+	classifier->eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(10, 10));
 	return eyes;
 }
 
 void FaceDetection::show() const {
 	for (auto& face : faces_data) {
 		Point center(face.first.x + face.first.width*0.5, face.first.y + face.first.height*0.5);
+		//rectangle(image, face.first.tl(), face.first.br(), Scalar(255, 0, 255), 4, 8, 0);
 		ellipse(image, center, Size(face.first.width*0.5, face.first.height*0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
 		for (auto& eye : face.second) {
-			Point center(face.first.x + eye.x + eye.width*0.5, face.first.y + eye.y + eye.height);
+			Point center(face.first.x + eye.x + eye.width*0.5, face.first.y + eye.y + eye.height*0.5);
 			int radius = cvRound((eye.width + eye.height)*0.25);
 			circle(image, center, radius, Scalar(255, 0, 0), 4, 8, 0);
 		}
