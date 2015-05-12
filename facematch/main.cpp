@@ -43,7 +43,7 @@ int main(int argc, char** argv ) {
 	vector<int> labels;
 	try {
 		cout << "Reading dataset... ";
-		read_csv(argv[1], images, labels, ';', 150);
+		read_csv(argv[1], images, labels, ';');
 		cout << images.size() << " images read" << endl;
 	}
 	catch (cv::Exception& e) {
@@ -71,9 +71,13 @@ int main(int argc, char** argv ) {
 	});
 	cout << n_faces.first << " faces found (only " << n_faces.second << " with both eyes)." << endl;
 
-	std::for_each(faces.begin(), faces.end(), [](const pair<size_t, vector<Face>>& item) {
+    size_t i = 0;
+	std::for_each(faces.begin(), faces.end(), [&i](const pair<size_t, vector<Face>>& item) {
 		for (auto& face : item.second) {
-			imshow("Image", face.crop(100, true));
+            Mat image = face.crop(100, true);
+            std::stringstream ss; ss << "image_" << item.first << "_face_" << i++ << ".jpg";
+            imwrite( ss.str(), image );
+			imshow("Image", image);
 			waitKey(0);
 		}
 	});
