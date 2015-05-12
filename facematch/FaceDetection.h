@@ -1,22 +1,19 @@
 
+#pragma once
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
 
+#include "Face.h"
+
 class FaceDetection {
 	public:
-		FaceDetection(const cv::Mat& img);
+		static cv::Mat cropFace(const cv::Mat& image, const cv::Rect& rect);
+		static std::vector<Face> detectFaces(const cv::Mat& image, bool detect_eyes);
+		static std::vector<cv::Rect> detectEyes(const cv::Mat& image, const cv::Rect& face = cv::Rect());
 
-		void detect();
-		static std::vector<cv::Rect> detectFaces(const cv::Mat& image);
-		static std::vector<cv::Rect> detectEyes(const cv::Mat& image, const cv::Rect& face);
-
-		std::vector<std::pair<cv::Rect, std::vector<cv::Rect>>> get_faces() const { return faces_data; };
-		void show() const;
+		static void initClassfier();
 	protected:
-		cv::Mat image;		
-		std::vector<std::pair<cv::Rect, std::vector<cv::Rect>>> faces_data;
-		
 		struct ClassifierData;
 		static ClassifierData* classifier;
 };

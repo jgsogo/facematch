@@ -12,7 +12,7 @@
 using namespace cv;
 using namespace std;
 
-static void read_csv(const string& filename, map<size_t, FaceDetection>& images, vector<int>& labels, char separator = ';', const size_t& max_items = numeric_limits<size_t>::max()) {
+static void read_csv(const string& filename, map<size_t, Mat>& images, vector<int>& labels, char separator = ';', const size_t& max_items = numeric_limits<size_t>::max()) {
 	std::ifstream file(filename.c_str(), ifstream::in);
 	if (!file) {
 		string error_message = "No valid input file was given, please check the given filename.";
@@ -39,7 +39,7 @@ int main(int argc, char** argv ) {
         exit(1);
     }
 	// Read CSV file
-	map<size_t, FaceDetection> images;
+	map<size_t, Mat> images;
 	vector<int> labels;
 	try {
 		cout << "Reading dataset... ";
@@ -56,10 +56,20 @@ int main(int argc, char** argv ) {
 	}
 
 	// Work on each image to get faces and eyes
-	std::for_each(images.begin(), images.end(), [](pair<const size_t, FaceDetection>& item) {
-		item.second.detect();
-		//item.second.show();
+	std::vector<Face> faces;
+	std::for_each(images.begin(), images.end(), [&faces](pair<const size_t, Mat>& item) {
+		auto faces_aux = FaceDetection::detectFaces(item.second, true);
+		copy_if(faces_aux.begin(), faces_aux.end(), back_inserter(faces), [](const Face& face){ return face.hasEyes(); });
 	});
+
+	std::for_each(faces.begin(), faces.end(), [](Face& item) {
+		//item.crop(1, true);
+		imshow("Image", item.crop(10, true));
+		//show(item, true);
+		waitKey(0);
+	});
+
+
     
     //  * work on each image to get faces
     //  * crop and rescale
