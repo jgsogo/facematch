@@ -12,9 +12,10 @@ def build_csv(directory):
               i = 0
               for root, dirs, files in os.walk(directory):
                             for name in files:
-                                          path = os.path.abspath(os.path.join(root, name))
-                                          f.write('%d;%s;%d\n' % (i, path, label))
-                                          i += 1
+					  if name.lower().endswith(('png', 'jpg', 'jpeg')):
+	                                          path = os.path.abspath(os.path.join(root, name))
+        	                                  f.write('%d;%s;%d\n' % (i, path, label))
+                	                          i += 1
                             label += 1
               f.close()
 

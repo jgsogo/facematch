@@ -24,23 +24,24 @@ def get_flickr(config_file):
 
 def download_photo(photo, path):
 	title = photo.get('title')
-	photo_url = u'https://farm%(farm)s.staticflickr.com/%(server)s/%(id)s_%(secret)s_o.jpg' % {'farm': photo.get('farm'),
+	photo_url = u'https://farm%(farm)s.staticflickr.com/%(server)s/%(id)s_%(secret)s_b.jpg' % {'farm': photo.get('farm'),
 												   'server': photo.get('server'),
 												   'id': photo.get('id'),
                                                                                                    'secret': photo.get('secret')}
 	id = photo.get('id')
 	filename = os.path.join(path, "%s.jpg" % id)
-	with open(filename, 'wb') as handle:
-		response = requests.get(photo_url, stream=True)
+	if not os.path.isfile(filename):
+		with open(filename, 'wb') as handle:
+			response = requests.get(photo_url, stream=True)
 
-		if not response.ok:
-			# Something went wrong
-			pass
-
-		for block in response.iter_content(1024):
-        		if not block:
-            			break
-        		handle.write(block)
+			if not response.ok:
+				# Something went wrong
+				pass
+	
+			for block in response.iter_content(1024):
+        			if not block:
+            				break
+	        		handle.write(block)
 	return id, title
 
 def download_album(api, album_id, path):
@@ -49,7 +50,8 @@ def download_album(api, album_id, path):
 	with open(filename, 'w') as filetitle:
 	        for photo in api.walk_set(album_id):
 			id, title = download_photo(photo, path)
-			filetitle.write("%s;%s\n" % (id, title))
+			line = u'%s;%s\n' % (id, title)
+			filetitle.write(line.encode('utf8'))
 			print(title)
 
 
