@@ -10,8 +10,16 @@ set(SRC_FILES
 			${_src}
 			CMakeLists.txt
             )
-include_directories(${OpenCV_INCLUDE_DIRS})
-add_executable( facematch ${SRC_FILES} )
+# Clustering library
+find_path(Eigen2_INCLUDE_DIR
+  NAMES Eigen/Core
+  PATH_SUFFIXES eigen2
+)
+file(GLOB clustering_headers "clustering/*.h")
+file(GLOB clustering_src "clustering/*.cpp")
+
+include_directories(${OpenCV_INCLUDE_DIRS} ${Eigen2_INCLUDE_DIR})
+add_executable( facematch ${SRC_FILES} ${clustering_src} ${clustering_headers} )
 set_property(TARGET facematch PROPERTY CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 target_link_libraries( facematch ${OpenCV_LIBS} )

@@ -8,7 +8,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "facematch.h"
-#include "FaceDetection.h"
+#include "clustering.h"
+
 
 using namespace cv;
 using namespace std;
@@ -71,7 +72,26 @@ int main(int argc, char** argv ) {
         cout << "Distances already computed in '" << distances_csv << "'." << endl;
 	}
 
+    // Make spectral clustering
+    string spectral_clustering = working_dir + "/spectral_clustering.csv";
+    if (!is_file_exist(spectral_clustering)) {
+        cout << "Computing spectral clustering for dataset at '" << distances_csv << "'" << endl;
+        auto cs = compute_spectral(distances_csv, spectral_clustering);
+    }
+    else {
+        cout << "Spectral clustering already computed in '" << spectral_clustering << "'." << endl;
+    }
 
+    // KMeans spectral clustering
+    string kmeans_clustering = working_dir + "/kmeans_clustering.csv";
+    if (!is_file_exist(kmeans_clustering)) {
+        cout << "Computing kmeans clustering for dataset at '" << kmeans_clustering << "'" << endl;
+        auto k = 20;
+        auto cs = compute_kmeans(distances_csv, k, kmeans_clustering);
+    }
+    else {
+        cout << "Kmeans clustering already computed in '" << kmeans_clustering << "'." << endl;
+    }
 
     // Unsupervised classification
     //  * apply unsupervised classification: kmeans
