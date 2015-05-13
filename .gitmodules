@@ -1,0 +1,3 @@
+[submodule "facematch/clustering"]
+	path = facematch/clustering
+	url = https://github.com/pthimon/clustering.git
