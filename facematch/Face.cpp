@@ -23,7 +23,7 @@ bool Face::hasEyes() const {
 	return (eye_left.width != 0) && (eye_right.width != 0);
 }
 
-Mat Face::crop(const float& out_radius, bool align_eyes) const {
+Mat Face::crop(const size_t& out_radius, bool align_eyes) const {
 	// Crop to circle
 	Point center(image.cols / 2., image.rows / 2.);
 	int radius = (max)(image.cols, image.rows)/2.;
@@ -33,17 +33,20 @@ Mat Face::crop(const float& out_radius, bool align_eyes) const {
 	Mat res;
 	bitwise_and(image, im2, res);
 
-	if (align_eyes) {
+	if (align_eyes && hasEyes()) {
 		auto angle = fastAtan2(eye_right.y - eye_left.y, eye_right.x - eye_left.x);
 		Mat rot_mat = getRotationMatrix2D(center, angle, 1.0);
 		warpAffine(res, res, rot_mat, res.size());		
 	}
 
 	// Scale
-	Mat ret;
-	resize(res, ret, Size(out_radius * 2, out_radius * 2));
+	if (out_radius != 0) {
+		Mat ret;
+		resize(res, ret, Size(out_radius * 2, out_radius * 2));
+		res = ret;
+	}
 
-	return ret;
+	return res;
 }
 
 void show(const Face& face, bool show_eyes) {

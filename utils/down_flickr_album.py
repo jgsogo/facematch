@@ -4,8 +4,8 @@ import ConfigParser
 from flickrapi import FlickrAPI
 from flickrapi.exceptions import FlickrError
 from django.template.defaultfilters import slugify
-import requests
 import os
+import requests
 
 def get_flickr(config_file):
 	config = ConfigParser.ConfigParser()
@@ -15,19 +15,19 @@ def get_flickr(config_file):
 	api_secret = config.get('Flickr', 'api_secret')
 	api = FlickrAPI(api_key, api_secret, cache=True)
 	if not api.token_valid(perms=u'read'):
-		api.get_request_token(oauth_callback='oob')
-                authorize_url = api.auth_url(perms=u'read')
-                verifier = unicode(raw_input('Verifier code for %s:' % authorize_url))
-                api.get_access_token(verifier)
+                            api.get_request_token(oauth_callback='oob')
+                            authorize_url = api.auth_url(perms=u'read')
+                            verifier = unicode(raw_input('Verifier code for %s:' % authorize_url))
+                            api.get_access_token(verifier)
 	return api
 
 
 def download_photo(photo, path):
 	title = photo.get('title')
-	photo_url = u'https://farm%(farm)s.staticflickr.com/%(server)s/%(id)s_%(secret)s_b.jpg' % {'farm': photo.get('farm'),
-												   'server': photo.get('server'),
-												   'id': photo.get('id'),
-                                                                                                   'secret': photo.get('secret')}
+	photo_url = u'https://farm%(farm)s.staticflickr.com/%(server)s/%(id)s_%(secret)s_b.jpg' % { 'farm': photo.get('farm'),
+                                                                                                'server': photo.get('server'),
+                                                                                                'id': photo.get('id'),
+                                                                                                'secret': photo.get('secret')}
 	id = photo.get('id')
 	filename = os.path.join(path, "%s.jpg" % id)
 	if not os.path.isfile(filename):

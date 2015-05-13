@@ -10,7 +10,7 @@ class Face {
 		const cv::Mat& getImage() const { return image; };
 		const cv::Rect& getEyeLeft() const { return eye_left; };
 		const cv::Rect& getEyeRight() const { return eye_right; };
-		cv::Mat crop(const float& radius, bool align_eyes) const;
+		cv::Mat crop(const std::size_t& radius = 0, bool align_eyes = false) const;
 	protected:
 		cv::Mat image;
 		cv::Rect eye_left, eye_right;
