@@ -7,6 +7,7 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 
+#include "facematch.h"
 #include "FaceDetection.h"
 
 using namespace cv;
@@ -67,43 +68,13 @@ int main(int argc, char** argv ) {
 	auto working_dir = config_file.substr(0, found);
 	auto faces_min_size = (cfg.find("faces_min_size") != cfg.end()) ? atoi(cfg["faces_min_size"].c_str()) : 30;
 
-	// Read CSV file
-	map<size_t, Mat> images;
-	vector<int> labels;
-	cout << "Reading dataset '" << cfg["id"] << "'... ";
-	read_csv(cfg["dataset"], images, labels, ';');
-	cout << images.size() << " images read." << endl;
-
-	// Work on each image to get faces and eyes
-	cout << "Looking for faces in images... " << endl;
-	map<size_t, vector<Face>> faces;
-	cv::Size min_size(faces_min_size, faces_min_size);
-	ofstream faces_file(working_dir + "/faces.csv", ofstream::out);
-	faces_file << "# id; path; image_id; eyes\n";
-	auto i = 0;
-	for_each(images.begin(), images.end(), [&faces, &min_size, &working_dir, &faces_file, &i](const pair<size_t, Mat>& item) {
-        try {
-            auto faces_aux = FaceDetection::detectFaces(item.second, min_size, true);
-			auto it = faces.insert(make_pair(item.first, vector<Face>()));
-            for (auto& face : faces_aux) {
-				std::stringstream ss; ss << working_dir << "/image_" << item.first << "_face_" << i << ".jpg";
-				faces_file << i << ";" << ss.str() << ";" << item.first << ";" << face.hasEyes() << "\n";
-				Mat image = face.crop(0, true);
-				imwrite(ss.str(), image);
-				it.first->second.push_back(image);
-				i++;
-				if (item.first % 20 == 0) {
-					cout << item.first << " images processed. Found " << i << " faces." << endl;
-				}
-            }
-        }
-        catch(Exception& e) {
-            cout << "cv::Exception: " << e.what() << endl;
-        }
-        catch(exception& e) {
-            cout << "std::Exception: " << e.what() << endl;
-        }
-	});
+	// Find faces in images
+	cout << "Detecting faces in dataset '" << cfg["dataset"] << "'..." << endl;
+	//auto faces_csv = detectFaces(cfg["dataset"], cv::Size(faces_min_size, faces_min_size), working_dir);
+	
+	// Compute distances
+	//cout << "Computing distances in dataset '" << faces_csv << "'..." << endl;
+	compute_distances(cfg["faces_csv"], 10);
 
     // Unsupervised classification
     //  * apply unsupervised classification: kmeans
