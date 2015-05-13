@@ -58,28 +58,45 @@ int main(int argc, char** argv ) {
 	pair<size_t, size_t> n_faces = make_pair(0, 0);
 	cv::Size min_size(30, 30);
 	for_each(images.begin(), images.end(), [&faces, &common_size, &min_size, &n_faces](const pair<size_t, Mat>& item) {
-		auto faces_aux = FaceDetection::detectFaces(item.second, min_size, true);
-		for (auto& face : faces_aux) {
-			if (face.hasEyes()) {
-				common_size = (min)(common_size, face.getImage().size().width);
-				auto it = faces.insert(make_pair(item.first, vector<Face>()));
-				it.first->second.push_back(face);
-				n_faces.second++;
-			}
-			n_faces.first++;
-		}
+        try {
+            auto faces_aux = FaceDetection::detectFaces(item.second, min_size, true);
+            for (auto& face : faces_aux) {
+                if (face.hasEyes()) {
+                    common_size = (min)(common_size, face.getImage().size().width);
+                    auto it = faces.insert(make_pair(item.first, vector<Face>()));
+                    it.first->second.push_back(face);
+                    n_faces.second++;
+                }
+                n_faces.first++;
+            }
+        }
+        catch(Exception& e) {
+            cout << "cv::Exception: " << e.what() << endl;
+        }
+        catch(exception& e) {
+            cout << "std::Exception: " << e.what() << endl;
+        }
 	});
 	cout << n_faces.first << " faces found (only " << n_faces.second << " with both eyes)." << endl;
 
     size_t i = 0;
 	std::for_each(faces.begin(), faces.end(), [&i](const pair<size_t, vector<Face>>& item) {
 		for (auto& face : item.second) {
-            Mat image = face.crop(100, true);
-            std::stringstream ss; ss << "image_" << item.first << "_face_" << i++ << ".jpg";
-            imwrite( ss.str(), image );
-			//imshow("Image", image);
-			//waitKey(0);
+            try {
+                Mat image = face.crop(100, true);
+                std::stringstream ss; ss << "image_" << item.first << "_face_" << i++ << ".jpg";
+                imwrite( ss.str(), image );
+                //imshow("Image", image);
+                //waitKey(0);
+            }
+            catch(Exception& e) {
+                cout << "cv::Exception: " << e.what() << endl;
+            }
+            catch(exception& e) {
+                cout << "std::Exception: " << e.what() << endl;
+            }
 		}
+
 	});
 
 
