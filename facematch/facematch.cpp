@@ -7,16 +7,18 @@
 using namespace std;
 using namespace cv;
 
-string detectFaces(const string& csv_dataset, const Size& min_face_size, const std::string& working_dir, std::ostream& os) {
+void detectFaces(const string& csv_dataset, const Size& min_face_size, const std::string& faces_filename, std::ostream& os) {
 	ifstream file(csv_dataset.c_str(), ifstream::in);
 	if (!file) {
 		string error_message = "No valid input file was given, please check the given filename.";
 		CV_Error(CV_StsBadArg, error_message);
 	}
+	auto found = faces_filename.find_last_of("/\\");
+	auto working_dir = faces_filename.substr(0, found);
+
 	string line, path, classlabel, token;
 	size_t id;
 	auto i = 0;
-	string faces_filename = working_dir + "/faces.csv";
 	ofstream faces_file(faces_filename);
 	faces_file << "# id; path; image_id; eyes\n";
 	while (getline(file, line)) {
@@ -49,7 +51,6 @@ string detectFaces(const string& csv_dataset, const Size& min_face_size, const s
 	}
 	faces_file.close();
 	os << "Output DB writen in '" << faces_filename << "'" << endl;
-	return faces_filename;
 }
 
 double get_distance(const Mat& lhs, const Mat& rhs, bool do_resize) {
@@ -70,24 +71,23 @@ double get_distance(const Mat& lhs, const Mat& rhs, bool do_resize) {
 	}
 	else {
 		return numeric_limits<double>::max();
-	}	
+	}
 }
 
-void compute_distances(const std::string& csv_images, const std::size_t& limit_images, std::ostream& os) {
+void compute_distances(const string& csv_images, const string& distances_filename, std::ostream& os) {
 	ifstream file(csv_images.c_str(), ifstream::in);
 	if (!file) {
 		string error_message = "No valid input file was given, please check the given filename.";
 		CV_Error(CV_StsBadArg, error_message);
 	}
-	
-	os << "Reading up to " << limit_images << " images..." << endl;
+
+	os << "Reading images..." << endl;
 	vector<pair<size_t, Mat>> images;
 	string line, path, token;
 	size_t id;
 	auto i = 0;
-	auto n_images = limit_images+1;
-	while (getline(file, line) && --n_images) {
-		if (line.substr(0, 1) == "#") { n_images++; continue; }
+	while (getline(file, line)) {
+		if (line.substr(0, 1) == "#") { continue; }
 		stringstream liness(line);
 		getline(liness, token, ';'); id = atoi(token.c_str());
 		getline(liness, path, ';');
@@ -101,18 +101,17 @@ void compute_distances(const std::string& csv_images, const std::size_t& limit_i
 		}
 	}
 
-	auto n_computations = pow(images.size(), 2);
+	auto n_computations = pow(images.size()-1, 2)/2.;
 	os << "Compute distances between " << images.size() << " images (" << n_computations << " computations)." << endl;
 	auto found = csv_images.find_last_of("/\\");
 	auto working_dir = csv_images.substr(0, found);
 
-	string distances_filename = working_dir + "/distance.csv";
 	ofstream distances_file(distances_filename);
 	distances_file << "# id1; id2; distance\n";
-	
+
 	i = 0;
 	for (auto im1 = images.begin(); im1 != images.end(); ++im1) {
-		for (auto im2 = im1; im2 != images.end(); ++im2) {
+		for (auto im2 = im1+1; im2 != images.end(); ++im2) {
 			auto d = get_distance(im1->second, im2->second, true);
 			distances_file << im1->first << ";" << im2->first << ";" << d << "\n";
 			i++;
@@ -121,6 +120,7 @@ void compute_distances(const std::string& csv_images, const std::size_t& limit_i
 			}
 		}
 	}
-	
+
 	distances_file.close();
+	os << "Output DB writen in '" << distances_filename << "'" << endl;
 }

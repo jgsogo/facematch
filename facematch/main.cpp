@@ -13,26 +13,9 @@
 using namespace cv;
 using namespace std;
 
-static void read_csv(const string& filename, map<size_t, Mat>& images, vector<int>& labels, char separator = ';', const size_t& max_items = numeric_limits<size_t>::max()) {
-	std::ifstream file(filename.c_str(), ifstream::in);
-	if (!file) {
-		string error_message = "No valid input file was given, please check the given filename.";
-		CV_Error(CV_StsBadArg, error_message);
-	}
-	auto n_items = max_items;
-	string line, path, classlabel, token;
-	std::size_t id;
-	while (getline(file, line) && --n_items) {
-		if (line.substr(0, 1) == "#") { ++n_items;  continue; }
-		stringstream liness(line);
-		getline(liness, token, separator); id = atoi(token.c_str());
-		getline(liness, path, separator);
-		getline(liness, classlabel);
-		if (!path.empty() && !classlabel.empty()) {
-			images.insert(make_pair(id, imread(path)));
-			labels.push_back(atoi(classlabel.c_str()));
-		}
-	}
+bool is_file_exist(const string& filename) {
+    std::ifstream infile(filename);
+    return infile.good();
 }
 
 map<string, string> parse_config(const string& filename) {
@@ -69,12 +52,26 @@ int main(int argc, char** argv ) {
 	auto faces_min_size = (cfg.find("faces_min_size") != cfg.end()) ? atoi(cfg["faces_min_size"].c_str()) : 30;
 
 	// Find faces in images
-	cout << "Detecting faces in dataset '" << cfg["dataset"] << "'..." << endl;
-	//auto faces_csv = detectFaces(cfg["dataset"], cv::Size(faces_min_size, faces_min_size), working_dir);
-	
+	string faces_csv = working_dir + "/faces.csv";
+	if (!is_file_exist(faces_csv)) {
+        cout << "Detecting faces in dataset '" << cfg["dataset"] << "'..." << endl;
+        detectFaces(cfg["dataset"], cv::Size(faces_min_size, faces_min_size), faces_csv);
+    }
+    else {
+        cout << "Faces already computed in '" << faces_csv << "'." << endl;
+    }
+
 	// Compute distances
-	//cout << "Computing distances in dataset '" << faces_csv << "'..." << endl;
-	compute_distances(cfg["faces_csv"], 10);
+	string distances_csv = working_dir + "/distance.csv";
+	if (!is_file_exist(distances_csv)) {
+        cout << "Computing distances in dataset '" << faces_csv << "'..." << endl;
+        compute_distances(faces_csv, distances_csv);
+	}
+	else {
+        cout << "Distances already computed in '" << distances_csv << "'." << endl;
+	}
+
+
 
     // Unsupervised classification
     //  * apply unsupervised classification: kmeans
