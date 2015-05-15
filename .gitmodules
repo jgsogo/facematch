@@ -1,3 +1,6 @@
 [submodule "facematch/clustering"]
 	path = facematch/clustering
 	url = https://github.com/pthimon/clustering.git
+[submodule "utils/google_download"]
+	path = utils/google_download
+	url = https://gist.github.com/905531c5f0f25166712e.git
