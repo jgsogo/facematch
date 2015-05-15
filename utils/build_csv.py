@@ -17,7 +17,7 @@ def build_csv(directory, output):
                 path = os.path.abspath(os.path.join(root, name))
                 f.write('%d;%s;%d\n' % (i, path, label))
                 i += 1
-            label += 1
+        label += 1
     f.close()
 
               
