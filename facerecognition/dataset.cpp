@@ -5,6 +5,27 @@
 using namespace std;
 using namespace cv;
 
+int read_labels_dataset(const string& config_file, map<int, string>& labels) {
+	auto cfg = parse_config(config_file);
+
+    // Read images and labels
+    ifstream file(cfg["labels"].c_str(), ifstream::in);
+	if (!file) {
+		string error_message = "No valid input file was given, please check the given filename.";
+		CV_Error(CV_StsBadArg, error_message);
+	}
+	string line, token, label;
+	size_t id;
+	while (getline(file, line)) {
+		if (line.substr(0, 1) == "#") { continue; }
+		stringstream liness(line);
+		getline(liness, token, ';'); id = atoi(token.c_str());
+		getline(liness, label);
+		labels.insert(make_pair(id, label));
+    }
+
+}
+
 int read_train_dataset(const string& config_file, vector<Mat>& images, vector<int>& labels) {
 	auto train_cfg = parse_config(config_file);
 	auto images_file = train_cfg["dataset"];

@@ -56,52 +56,73 @@ int main(int argc, char** argv ) {
 		CV_Error(CV_StsBadArg, error_message);
 	}
 	string path, line, token;
-	size_t image_id, id;
-	map<int, vector<pair<int, double>>> predictions_eigen;
-	map<int, vector<pair<int, double>>> predictions_fisher;
-	map<int, vector<pair<int, double>>> predictions_lbph;
+	size_t face_id, id;
+	map<int, vector<pair<int, double>>> predictions_eigen; // <label, <image_id, confidence>>
+	map<int, vector<pair<int, double>>> predictions_fisher; // <label, <image_id, confidence>>
+	map<int, vector<pair<int, double>>> predictions_lbph; // <label, <image_id, confidence>>
+	map<int, vector<pair<int, double>>> predictions; // <face_id, <label, confidence>>
+	double max_eigen=0.0, max_fisher=0.0, max_lbph=0.0;
 	size_t i = 0;
 	while(getline(faces, line)) {
         if (line.substr(0, 1) == "#") {continue; }
         stringstream liness(line);
 		getline(liness, token, ';'); id = atoi(token.c_str());
 		getline(liness, path, ';');
-		getline(liness, token, ';'); image_id = atoi(token.c_str());
+		getline(liness, token, ';'); face_id = atoi(token.c_str());
 		getline(liness, token);
 
         Mat res = imread(path, 0);
         Mat img; resize(res, img, min_size);
 
         // Predict!
+        auto it_face = predictions.insert(make_pair(face_id, vector<pair<int,double>>()));
         int predictedLabel = -1;
         double confidence = 0.0;
         model_eigen->predict(img, predictedLabel, confidence);
-		predictions_eigen[predictedLabel].push_back(make_pair(image_id, confidence));
+		predictions_eigen[predictedLabel].push_back(make_pair(face_id, confidence));
+        it_face.first->second.push_back(make_pair(predictedLabel, confidence));
+        max_eigen = max(max_eigen, confidence);
 
         confidence = 0.0; predictedLabel = -1;
         model_fisher->predict(img, predictedLabel, confidence);
-		predictions_fisher[predictedLabel].push_back(make_pair(image_id, confidence));
+		predictions_fisher[predictedLabel].push_back(make_pair(face_id, confidence));
+		it_face.first->second.push_back(make_pair(predictedLabel, confidence));
+		max_fisher = max(max_fisher, confidence);
 
         confidence = 0.0; predictedLabel = -1;
         model_lbph->predict(img, predictedLabel, confidence);
-		predictions_lbph[predictedLabel].push_back(make_pair(image_id, confidence));
+		predictions_lbph[predictedLabel].push_back(make_pair(face_id, confidence));
+		it_face.first->second.push_back(make_pair(predictedLabel, confidence));
+		max_lbph = max(max_lbph, confidence);
 		i++;
 	}
     cout << "Classified " << i << " faces" << endl;
 
+    map<int, string> labels_str;
+    read_labels_dataset(argv[1], labels_str);
+
     cout << endl << "Eigenfaces" << endl;
     for (auto it = predictions_eigen.begin(); it!=predictions_eigen.end(); ++it) {
-        cout << "Label " << it->first << " got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
+        cout << "Label '" << labels_str[it->first] << "' got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
     }
 
     cout << endl << "Fisherfaces" << endl;
     for (auto it = predictions_fisher.begin(); it!=predictions_fisher.end(); ++it) {
-        cout << "Label " << it->first << " got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
+        cout << "Label '" << labels_str[it->first] << "' got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
     }
 
     cout << endl << "Local Binary Pattern Histogram faces" << endl;
     for (auto it = predictions_lbph.begin(); it!=predictions_lbph.end(); ++it) {
-        cout << "Label " << it->first << " got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
+        cout << "Label '" << labels_str[it->first] << "' got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
+    }
+
+    // Look for cases with different labels
+    cout << endl << "Some example outputs:" << endl;
+    for (auto it = predictions.begin(); it!=predictions.end(); ++it) {
+        cout << "Face " << it->first << endl;
+        cout << "\t conf '" << it->second[0].second/max_eigen << "' labeled as '" << labels_str[it->second[0].first] << "'." << endl;
+        cout << "\t conf '" << it->second[1].second/max_fisher << "' labeled as '" << labels_str[it->second[0].first] << "'." << endl;
+        cout << "\t conf '" << it->second[2].second/max_lbph << "' labeled as '" << labels_str[it->second[0].first] << "'." << endl;
     }
 
     waitKey(0);
