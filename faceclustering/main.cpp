@@ -7,7 +7,7 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 
-#include "facematch.h"
+#include "faceclustering.h"
 #include "clustering.h"
 
 
@@ -86,7 +86,7 @@ int main(int argc, char** argv ) {
     string kmeans_clustering = working_dir + "/kmeans_clustering.csv";
     if (!is_file_exist(kmeans_clustering)) {
         cout << "Computing kmeans clustering for dataset at '" << kmeans_clustering << "'" << endl;
-        auto k = 20;
+        auto k = 6;
         auto cs = compute_kmeans(distances_csv, k, kmeans_clustering);
     }
     else {
