@@ -5,6 +5,7 @@
 #include <sstream>
 #include <limits>
 #include <functional>
+#include <iterator>
 #include <opencv2/opencv.hpp>
 
 #include "parse_config.h"
@@ -34,6 +35,7 @@ int main(int argc, char** argv ) {
     Size min_size(images[0].cols, images[0].rows);
 
     // Models for recognizing
+    cout << "\t Train classifiers" << endl;
     Ptr<FaceRecognizer> model_eigen = createEigenFaceRecognizer();
     Ptr<FaceRecognizer> model_fisher = createFisherFaceRecognizer();
     Ptr<FaceRecognizer> model_lbph = createLBPHFaceRecognizer();
@@ -44,10 +46,12 @@ int main(int argc, char** argv ) {
 
 
     // Do classification
+    cout << endl << "Starting classification:" << endl;
 	auto config_file = string(argv[2]);
     auto classify_cfg = parse_config(config_file);
-	auto found = config_file.find_last_of("/\\");
-	auto working_dir = config_file.substr(0, found);
+    map<int, string> image_names;
+    get_image_names(config_file, image_names);
+    cout << "\t ...working on " << image_names.size() << " faces." << endl;
 
     // Read faces
     ifstream faces(classify_cfg["faces"].c_str(), ifstream::in);
@@ -68,34 +72,39 @@ int main(int argc, char** argv ) {
         stringstream liness(line);
 		getline(liness, token, ';'); id = atoi(token.c_str());
 		getline(liness, path, ';');
-		getline(liness, token, ';'); face_id = atoi(token.c_str());
+		getline(liness, token, ';');// image_id = atoi(token.c_str());
 		getline(liness, token);
 
         Mat res = imread(path, 0);
         Mat img; resize(res, img, min_size);
 
         // Predict!
-        auto it_face = predictions.insert(make_pair(face_id, vector<pair<int,double>>()));
+        auto it_face = predictions.insert(make_pair(id, vector<pair<int,double>>()));
         int predictedLabel = -1;
         double confidence = 0.0;
         model_eigen->predict(img, predictedLabel, confidence);
-		predictions_eigen[predictedLabel].push_back(make_pair(face_id, confidence));
+		predictions_eigen[predictedLabel].push_back(make_pair(id, confidence));
         it_face.first->second.push_back(make_pair(predictedLabel, confidence));
         max_eigen = max(max_eigen, confidence);
 
         confidence = 0.0; predictedLabel = -1;
         model_fisher->predict(img, predictedLabel, confidence);
-		predictions_fisher[predictedLabel].push_back(make_pair(face_id, confidence));
+		predictions_fisher[predictedLabel].push_back(make_pair(id, confidence));
 		it_face.first->second.push_back(make_pair(predictedLabel, confidence));
 		max_fisher = max(max_fisher, confidence);
 
         confidence = 0.0; predictedLabel = -1;
         model_lbph->predict(img, predictedLabel, confidence);
-		predictions_lbph[predictedLabel].push_back(make_pair(face_id, confidence));
+		predictions_lbph[predictedLabel].push_back(make_pair(id, confidence));
 		it_face.first->second.push_back(make_pair(predictedLabel, confidence));
 		max_lbph = max(max_lbph, confidence);
 		i++;
+
+		if (i % 50 == 0) {
+            cout << i << " faces classified" << endl;
+			}
 	}
+	faces.close();
     cout << "Classified " << i << " faces" << endl;
 
     map<int, string> labels_str;
@@ -116,7 +125,43 @@ int main(int argc, char** argv ) {
         cout << "Label '" << labels_str[it->first] << "' got " << it->second.size() << " images [" << it->second.size()/float(i)*100 << " %]" << endl;
     }
 
-    // Look for cases with different labels
+    // Check confidence
+    auto threshold = 0.66;
+    cout << endl << "Confidence over '" << threshold << "':" << endl;
+    vector<size_t> votes(labels_str.size(), 0);
+    for (auto it = predictions.begin(); it!=predictions.end(); ++it) {
+        vector<double> confidence(labels_str.size(), 0);
+        confidence[it->second[0].first] += it->second[0].second/max_eigen;
+        confidence[it->second[1].first] += it->second[1].second/max_eigen;
+        confidence[it->second[2].first] += it->second[2].second/max_eigen;
+        auto it_max = max_element(confidence.begin(), confidence.end());
+        if ((*it_max) >= threshold) {
+            cout << it->first << ": " << image_names[it->first] << " matched as ";
+            cout << labels_str[distance(confidence.begin(), it_max)] << "'" << endl;
+            votes[distance(confidence.begin(), it_max)] += 1;
+        }
+    }
+
+    // Final results
+    cout << endl << "Final count of votes:" << endl;
+    for (auto i = 1; i<votes.size(); ++i) {
+        cout << "\t " << labels_str[i] << ": " << votes[i] << " votes." << endl;
+    }
+    /*
+    cout << endl << "Mismatched outputs:" << endl;
+    for (auto it = predictions.begin(); it!=predictions.end(); ++it) {
+        auto eigen_label = it->second[0].first;
+        auto fisher_label = it->second[1].first;
+        auto lbph_label = it->second[2].first;
+        if (eigen_label != fisher_label || eigen_label != lbph_label || fisher_label != lbph_label) {
+            cout << it->first << ": " << image_names[it->first] << endl;
+            cout << "\t Eigenfaces:  conf '" << it->second[0].second/max_eigen << "' labeled as '" << labels_str[eigen_label] << "'." << endl;
+            cout << "\t Fisherfaces: conf '" << it->second[1].second/max_fisher << "' labeled as '" << labels_str[fisher_label] << "'." << endl;
+            cout << "\t LBPH faces:  conf '" << it->second[2].second/max_lbph << "' labeled as '" << labels_str[lbph_label] << "'." << endl;
+        }
+    }
+    */
+    /*
     cout << endl << "Some example outputs:" << endl;
     for (auto it = predictions.begin(); it!=predictions.end(); ++it) {
         cout << "Face " << it->first << endl;
@@ -124,6 +169,7 @@ int main(int argc, char** argv ) {
         cout << "\t conf '" << it->second[1].second/max_fisher << "' labeled as '" << labels_str[it->second[0].first] << "'." << endl;
         cout << "\t conf '" << it->second[2].second/max_lbph << "' labeled as '" << labels_str[it->second[0].first] << "'." << endl;
     }
+    */
 
     waitKey(0);
 
