@@ -136,7 +136,7 @@ int main(int argc, char** argv ) {
         confidence[it->second[2].first] += it->second[2].second/max_eigen;
         auto it_max = max_element(confidence.begin(), confidence.end());
         if ((*it_max) >= threshold) {
-            cout << it->first << ": " << image_names[it->first] << " matched as ";
+            cout << it->first << ": " << image_names[it->first] << " matched as '";
             cout << labels_str[distance(confidence.begin(), it_max)] << "'" << endl;
             votes[distance(confidence.begin(), it_max)] += 1;
         }
